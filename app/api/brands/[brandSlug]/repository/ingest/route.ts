@@ -37,9 +37,6 @@ export async function POST(
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    const { brandId } = await params;
-
-    // Check brand access
     const hasAccess = await hasBrandAccess(user.id, brandId);
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

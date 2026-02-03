@@ -41,12 +41,6 @@ export async function GET(
     if (!brandId) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { brandId } = await params;
 
     if (!(await hasBrandAccess(user.id, brandId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
