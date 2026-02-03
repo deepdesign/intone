@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { IssueStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getBrandIdFromSlug } from "@/lib/db/brand";
@@ -121,15 +122,22 @@ export async function PATCH(
     const { issueId, status, notes } = body;
 
     if (issueId) {
+      if (!Object.values(IssueStatus).includes(status)) {
+        return NextResponse.json(
+          { error: "Invalid status" },
+          { status: 400 }
+        );
+      }
+
       // Update issue status
       const updateData: {
-        status: string;
+        status: IssueStatus;
         updatedAt: Date;
         reviewedAt?: Date;
         fixedAt?: Date;
         notes?: string;
       } = {
-        status: status,
+        status: status as IssueStatus,
         updatedAt: new Date(),
       };
 
