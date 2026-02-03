@@ -1,0 +1,4 @@
+# Enforce coding guidelines
+*.tsx linguist-language=TypeScript
+*.ts linguist-language=TypeScript
+

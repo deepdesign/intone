@@ -1,0 +1,119 @@
+﻿­ƒöì Running code hygiene checks...
+
+­ƒôü Checking project structure...
+­ƒÆ╗ Checking code quality...
+­ƒÄ¿ Checking styling compliance...
+­ƒöî Checking API patterns...
+ÔÜø´©Å  Checking React patterns...
+
+============================================================
+Code Hygiene Check Report
+============================================================
+
+­ƒôè Summary:
+   Files checked: 220
+   Total issues: 333
+   ÔØî Errors: 162
+   ÔÜá´©Å  Warnings: 171
+   Ôä╣´©Å  Info: 0
+
+
+­ƒôé API Patterns: 41 issues
+   ÔØî 31 errors | ÔÜá´©Å  10 warnings | Ôä╣´©Å  0 info
+   ÔÜá´©Å app\api\auth\force-signout\route.ts:6 - API route handler 'POST' should check authentication using getCurrentUser.
+   ÔÜá´©Å app\api\auth\force-signout\route.ts:6 - POST/PUT/PATCH handlers should validate input using Zod schemas.
+   ÔÜá´©Å app\api\auth\signout\route.ts:8 - API route handler 'POST' should check authentication using getCurrentUser.
+   ÔÜá´©Å app\api\auth\signout\route.ts:8 - POST/PUT/PATCH handlers should validate input using Zod schemas.
+   ÔÜá´©Å app\api\auth\[...nextauth]\route.ts:28 - API route handler 'GET' should check authentication using getCurrentUser.
+   ÔÜá´©Å app\api\auth\[...nextauth]\route.ts:28 - POST/PUT/PATCH handlers should validate input using Zod schemas.
+   ÔØî app\api\brands\[brandSlug]\assets\colors\route.ts:21 - Route in [brandSlug] directory should use 'brandSlug' in params type, not 'brandId'.
+      params }: { params: Promise<{ brandId: string }
+   ÔØî app\api\brands\[brandSlug]\assets\colors\[colorId]\route.ts:21 - Route in [brandSlug] directory should use 'brandSlug' in params type, not 'brandId'.
+      params }: { params: Promise<{ brandId: string; colorId: string }
+   ÔØî app\api\brands\[brandSlug]\assets\fonts\route.ts:18 - Route in [brandSlug] directory should use 'brandSlug' in params type, not 'brandId'.
+      params }: { params: Promise<{ brandId: string }
+   ÔØî app\api\brands\[brandSlug]\assets\fonts\[fontId]\route.ts:18 - Route in [brandSlug] directory should use 'brandSlug' in params type, not 'brandId'.
+      params }: { params: Promise<{ brandId: string; fontId: string }
+   ... and 31 more issues
+
+­ƒôé Code Quality: 84 issues
+   ÔØî 0 errors | ÔÜá´©Å  84 warnings | Ôä╣´©Å  0 info
+   ÔÜá´©Å app\brands\[brandSlug]\repository\page.tsx:678 - Avoid using 'any' type. Use proper TypeScript types instead.
+      {cluster.chunks.map((chunk: any, idx: number) => (
+   ÔÜá´©Å app\brands\[brandSlug]\rules\custom\page.tsx:20 - Avoid using 'any' type. Use proper TypeScript types instead.
+      value: any;
+   ÔÜá´©Å app\brands\[brandSlug]\rules\page.tsx:64 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const toneCount = activeRules.filter((r: any) => r.category === "tone").length;
+   ÔÜá´©Å app\brands\[brandSlug]\rules\page.tsx:65 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const grammarCount = activeRules.filter((r: any) => r.category === "grammar").length;
+   ÔÜá´©Å app\brands\[brandSlug]\rules\page.tsx:66 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const numbersCount = activeRules.filter((r: any) => r.category === "numbers").length;
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\summary.tsx:109 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const getFormalityLabel = (value: any): string => {
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\summary.tsx:122 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const getConfidenceLabel = (value: any): string => {
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\summary.tsx:135 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const getDirectnessLabel = (value: any): string => {
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\summary.tsx:148 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const getEnthusiasmLabel = (value: any): string => {
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\summary.tsx:158 - Avoid using 'any' type. Use proper TypeScript types instead.
+      const getHumourLabel = (value: any): string => {
+   ... and 74 more issues
+
+­ƒôé Project Structure: 58 issues
+   ÔØî 0 errors | ÔÜá´©Å  58 warnings | Ôä╣´©Å  0 info
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\confidence.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'confidence.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\custom-variant.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'custom-variant.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\directness.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'directness.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\empathy.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'empathy.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\enthusiasm.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'enthusiasm.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\formality.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'formality.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\humour.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'humour.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\language-locale.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'language-locale.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\personality.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'personality.tsx'
+   ÔÜá´©Å app\brands\[brandSlug]\rules\tone\onboarding\steps\sentence-behavior.tsx:1 - Page file should be named 'page.tsx' or 'layout.tsx', found 'sentence-behavior.tsx'
+   ... and 48 more issues
+
+­ƒôé React Patterns: 8 issues
+   ÔØî 0 errors | ÔÜá´©Å  8 warnings | Ôä╣´©Å  0 info
+   ÔÜá´©Å components\assets\fonts-list.tsx:21 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\assets\logos-list.tsx:24 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\brand-llm\approve-copy-button.tsx:8 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\brand-llm\copy-suggestion.tsx:9 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\brand-llm\reject-copy-button.tsx:8 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\rules\rules-secondary-nav.tsx:14 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\rules\terminology\forbidden-words-server.tsx:7 - Component props should be properly typed with TypeScript interface or type.
+   ÔÜá´©Å components\tone-slider.tsx:20 - Component props should be properly typed with TypeScript interface or type.
+
+­ƒôé Styling: 142 issues
+   ÔØî 131 errors | ÔÜá´©Å  11 warnings | Ôä╣´©Å  0 info
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:154 - Hardcoded color detected: 'text-green-600'. Use CSS variables or semantic tokens instead.
+      return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:156 - Hardcoded color detected: 'text-gray-500'. Use CSS variables or semantic tokens instead.
+      return <Archive className="h-4 w-4 text-gray-500" />;
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:158 - Hardcoded color detected: 'text-amber-600'. Use CSS variables or semantic tokens instead.
+      return <AlertCircle className="h-4 w-4 text-amber-600" />;
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:165 - Hardcoded color detected: 'bg-green-600'. Use CSS variables or semantic tokens instead.
+      return <Badge variant="default" className="bg-green-600">Approved</Badge>;
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:683 - Hardcoded color detected: 'bg-green-50'. Use CSS variables or semantic tokens instead.
+      ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:683 - Hardcoded color detected: 'border-green-200'. Use CSS variables or semantic tokens instead.
+      ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:683 - Hardcoded color detected: 'bg-green-950'. Use CSS variables or semantic tokens instead.
+      ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:683 - Hardcoded color detected: 'border-green-800'. Use CSS variables or semantic tokens instead.
+      ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:690 - Hardcoded color detected: 'bg-green-600'. Use CSS variables or semantic tokens instead.
+      <Badge className="mb-1 bg-green-600">Canonical</Badge>
+   ÔØî app\brands\[brandSlug]\repository\page.tsx:695 - Hardcoded color detected: 'bg-green-600'. Use CSS variables or semantic tokens instead.
+      <Badge variant="default" className="bg-green-600">
+   ... and 132 more issues
+
+============================================================
+{
+  "error": {
+    "code": 1,
+    "summary": "",
+    "detail": ""
+  }
+}

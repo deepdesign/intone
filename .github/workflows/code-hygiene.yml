@@ -1,0 +1,69 @@
+name: Code Hygiene Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  code-hygiene:
+    name: Code Hygiene Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run code hygiene checks
+        id: hygiene-check
+        run: npm run check:hygiene -- --json > hygiene-report.json || true
+        continue-on-error: true
+
+      - name: Display report
+        run: |
+          if [ -f hygiene-report.json ]; then
+            echo "## Code Hygiene Check Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            npm run check:hygiene || true
+          else
+            echo "No report generated" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-hygiene-report
+          path: hygiene-report.json
+          retention-days: 7
+
+      - name: Fail if errors found
+        run: |
+          if [ -f hygiene-report.json ]; then
+            ERRORS=$(node -e "const report = require('./hygiene-report.json'); console.log(report.summary.errors || 0)")
+            if [ "$ERRORS" -gt 0 ]; then
+              echo "❌ Found $ERRORS error(s) in code hygiene check"
+              exit 1
+            else
+              echo "✅ No errors found in code hygiene check"
+            fi
+          else
+            echo "⚠️ Could not parse hygiene report"
+            exit 1
+          fi
+

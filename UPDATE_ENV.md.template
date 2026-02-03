@@ -1,0 +1,28 @@
+# Update .env File
+
+Please manually update your `.env` file with the following values:
+
+```env
+# Database (Neon)
+DATABASE_URL="postgresql://username:password@host:port/database?sslmode=require&channel_binding=require"
+
+# NextAuth.js
+NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Google OAuth (get from Google Cloud Console)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# OpenAI
+OPENAI_API_KEY="sk-your-openai-api-key"
+```
+
+**Note**: You still need to add Google OAuth credentials. The app will run but authentication won't work until those are added.
+
+**How to get these values:**
+- **DATABASE_URL**: Get from your Neon dashboard (or other PostgreSQL provider)
+- **NEXTAUTH_SECRET**: Run `openssl rand -base64 32` in terminal
+- **GOOGLE_CLIENT_ID/SECRET**: Get from Google Cloud Console (see GOOGLE_OAUTH_SETUP.md)
+- **OPENAI_API_KEY**: Get from OpenAI dashboard (optional, for AI features)
+

@@ -1,0 +1,813 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../node_modules/.prisma/client"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Auth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  openaiApiKey  String? // Encrypted OpenAI API key
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Member[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Intone core models
+
+// Rule type enums
+enum RuleType {
+  LANGUAGE_LOCALE
+  GRAMMAR_STYLE
+  TONE_VOICE
+  TERMINOLOGY
+  FORBIDDEN_WORDS
+  FORMATTING
+  INCLUSIVE_LANGUAGE
+  LEGAL_COMPLIANCE
+  CONTENT_PATTERNS
+  CUSTOM
+}
+
+enum RuleStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+}
+
+enum RuleScope {
+  GLOBAL
+  SURFACE
+  CHANNEL
+  ASSET
+  INTEGRATION
+}
+
+enum RuleSeverity {
+  INFO
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum EnforcementLevel {
+  SUGGEST
+  WARN
+  BLOCK
+}
+
+enum DetectorKind {
+  REGEX
+  DICTIONARY
+  STYLE_CHECK
+  LLM_CLASSIFIER
+  LLM_REWRITE
+  LINK_CRAWLER
+  DOC_PARSER
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  members   Member[]
+  brands    Brand[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  role      String   @default("viewer") // owner, editor, viewer
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgId, userId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+model Brand {
+  id              String           @id @default(cuid())
+  orgId           String
+  name            String
+  slug            String
+  locale          String           @default("en-GB") // en-GB, en-US, en-AU
+  template        String           @default("product-ui") // product-ui, marketing, support
+  rules           Rule[]
+  ruleSetVersions RuleSetVersion[]
+  documents       Document[]
+  lintResults     LintResult[]
+  audits          Audit[]
+  snippets        Snippet[]
+  learnSessions   LearnSession[]
+  discoveredRules DiscoveredRule[]
+  approvedCopies  ApprovedCopy[]
+  rejectedCopies  RejectedCopy[]
+  brandLLMModels  BrandLLMModel[]
+  copySuggestions CopySuggestion[]
+  repositoryChunks RepositoryChunk[]
+  repositoryClusters RepositoryCluster[]
+  repositoryConflicts RepositoryConflict[]
+  brandColors      BrandColor[]
+  brandFonts       BrandFont[]
+  brandLogos       BrandLogo[]
+  org             Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([orgId, slug], name: "orgId_slug")
+  @@index([orgId])
+}
+
+model Snippet {
+  id        String           @id @default(cuid())
+  brandId   String
+  name      String
+  slug      String
+  url       String? // URL to full document (e.g., full terms & conditions page)
+  brand     Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  variants  SnippetVariant[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([brandId, slug], name: "brandId_slug")
+  @@index([brandId])
+}
+
+model SnippetVariant {
+  id        String   @id @default(cuid())
+  snippetId String
+  name      String // e.g., "Short", "Long", "Legal"
+  content   String   @db.Text
+  snippet   Snippet  @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([snippetId, name], name: "snippetId_name")
+  @@index([snippetId])
+}
+
+// Unified Rule model - replaces RuleDefinition, RuleInstance, and CustomRule
+model Rule {
+  id      String     @id @default(cuid())
+  brandId String
+  name    String
+  type    RuleType
+  status  RuleStatus @default(ACTIVE)
+
+  // Scope fields
+  scope      RuleScope @default(GLOBAL)
+  surfaces   String[] // e.g., ["Marketing site", "App UI", "Emails", "Push", "Help centre"]
+  channels   String[] // e.g., ["Web", "iOS", "Android", "Social", "Support"]
+  components String[] // e.g., ["Buttons", "Headings", "Error states", "Forms"]
+  locales    String[] // e.g., ["en-GB", "en-US"]
+
+  // Severity and enforcement
+  severity    RuleSeverity     @default(MINOR)
+  enforcement EnforcementLevel @default(WARN)
+  confidence  Float? // Engine estimated 0-1, for ML rules
+
+  // Behavior fields
+  description String   @db.Text
+  rationale   String?  @db.Text // why it exists, written for humans
+  examples    Json? // { do: string[], dont: string[] }
+  suggestions String[] // rewrite suggestions, preferred alternatives
+  exceptions  String[] // contexts where rule should not apply
+  edgeNotes   String?  @db.Text // what commonly goes wrong
+
+  // Detection
+  detectors Json? // array of detector configs: [{ kind, pattern, caseSensitivity, wordBoundary, languageModelPrompt, minEvidence }]
+
+  // Output
+  findingTemplate String?  @db.Text // message shown in lint results
+  rewriteTemplate String?  @db.Text // for auto-suggest
+  references      String[] // links to internal brand docs, optional
+
+  // Versioning
+  version        Int     @default(1)
+  previousRuleId String? // for audit trail
+  changeLog      String? @db.Text // human summary
+
+  // Ownership
+  createdBy String
+  owners    String[] // people or roles responsible
+
+  // Legacy fields for migration compatibility
+  key         String? // e.g., "tone.formality" - for backward compatibility
+  category    String? // tone, grammar, terminology - for backward compatibility
+  controlType String? // toggle, select, slider, list - for backward compatibility
+  value       Json? // legacy value field
+  priority    Int     @default(0)
+  source      String  @default("template") // template, manual, import
+
+  // Learn feature fields
+  learnSessionId   String? // If created from Learn feature
+  discoveredRuleId String? // Link back to DiscoveredRule
+
+  brand       Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  findings    Finding[]
+  auditIssues AuditIssue[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([brandId])
+  @@index([type])
+  @@index([status])
+  @@index([scope])
+  @@index([brandId, type])
+  @@index([brandId, status])
+}
+
+model RuleSetVersion {
+  id        String   @id @default(cuid())
+  brandId   String
+  version   Int
+  createdBy String
+  summary   String?  @db.Text
+  ruleIds   String[] // Array of rule IDs in this version
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([brandId, version], name: "brandId_version")
+  @@index([brandId])
+}
+
+model Document {
+  id          String       @id @default(cuid())
+  brandId     String
+  name        String
+  url         String?
+  content     String?      @db.Text
+  type        String? // website, pdf, doc
+  lintResults LintResult[]
+  brand       Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([brandId])
+}
+
+model Finding {
+  id             String       @id @default(cuid())
+  lintResultId   String
+  ruleId         String
+  locationStart  Int // start position in text
+  locationEnd    Int // end position in text
+  severity       RuleSeverity
+  message        String       @db.Text
+  suggestedFix   String?      @db.Text
+  confidence     Float? // 0-1 confidence score
+  approvedCopyId String? // Link to ApprovedCopy if this fix was approved
+
+  lintResult   LintResult    @relation(fields: [lintResultId], references: [id], onDelete: Cascade)
+  rule         Rule          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  approvedCopy ApprovedCopy? @relation(fields: [approvedCopyId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+
+  @@index([lintResultId])
+  @@index([ruleId])
+  @@index([approvedCopyId])
+}
+
+model LintResult {
+  id             String    @id @default(cuid())
+  brandId        String
+  documentId     String?
+  input          String    @db.Text
+  output         String?   @db.Text
+  context        String // ui, marketing, support
+  status         String? // pending, completed, failed
+  surface        String? // Marketing site, App UI, etc.
+  channel        String? // Web, iOS, Android, etc.
+  locale         String? // en-GB, en-US, etc.
+  triggeredRules Json? // Array of rule explanations - kept for backward compatibility
+  findings       Finding[]
+  brand          Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  document       Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now())
+
+  @@index([brandId])
+  @@index([documentId])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  orgId     String?
+  brandId   String?
+  key       String // e.g. "unlimited_rewrites", "custom_rules"
+  enabled   Boolean  @default(false)
+  metadata  Json? // additional config
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgId, brandId, key], name: "orgId_brandId_key")
+  @@index([orgId])
+  @@index([brandId])
+  @@index([key])
+}
+
+enum AuditStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AuditSourceType {
+  URL
+  FILE_UPLOAD
+  FILE_LINK
+}
+
+enum IssueStatus {
+  PENDING
+  REVIEWED
+  FIXED
+  IGNORED
+}
+
+model Audit {
+  id                   String          @id @default(cuid())
+  brandId              String
+  sourceType           AuditSourceType
+  sourceUrl            String? // URL or file link
+  fileName             String? // For file uploads
+  fileType             String? // pdf, docx, txt, etc.
+  crawlDepth           Int? // For URL crawls
+  maxPages             Int? // User-configurable limit
+  status               AuditStatus     @default(PENDING)
+  overallScore         Float? // 0-100
+  totalPages           Int             @default(0)
+  totalIssues          Int             @default(0)
+  issuesByCategory     Json? // { tone: 5, grammar: 3, ... }
+  issuesBySeverity     Json? // { CRITICAL: 2, MAJOR: 5, ... }
+  compliancePercentage Float? // Overall compliance %
+  metadata             Json? // Additional audit metadata
+  issues               AuditIssue[]
+  brand                Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  completedAt          DateTime?
+
+  @@index([brandId])
+  @@index([status])
+  @@index([brandId, status])
+}
+
+model AuditIssue {
+  id             String        @id @default(cuid())
+  auditId        String
+  ruleId         String
+  pageUrl        String? // URL or page identifier
+  pageNumber     Int? // For documents
+  locationStart  Int // Character position
+  locationEnd    Int // Character position
+  issueText      String        @db.Text // The problematic text
+  contextBefore  String?       @db.Text // 50 chars before
+  contextAfter   String?       @db.Text // 50 chars after
+  severity       RuleSeverity
+  message        String        @db.Text // Why it's wrong
+  suggestedFix   String?       @db.Text // What it should be
+  category       String? // tone, grammar, numbers, etc.
+  status         IssueStatus   @default(PENDING)
+  reviewedAt     DateTime?
+  fixedAt        DateTime?
+  notes          String?       @db.Text // User notes
+  approvedCopyId String? // Link to ApprovedCopy if this fix was approved
+  audit          Audit         @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  rule           Rule          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  approvedCopy   ApprovedCopy? @relation(fields: [approvedCopyId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([auditId])
+  @@index([ruleId])
+  @@index([status])
+  @@index([category])
+  @@index([auditId, category])
+  @@index([auditId, status])
+  @@index([approvedCopyId])
+}
+
+enum LearnSessionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum LearnSourceType {
+  URL
+  FILE_UPLOAD
+  FILE_LINK
+  TEXT_PASTE
+}
+
+enum DiscoveredRuleStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  UPDATED
+}
+
+model LearnSession {
+  id              String             @id @default(cuid())
+  brandId         String
+  status          LearnSessionStatus @default(PENDING)
+  sourceType      LearnSourceType
+  sourceUrl       String? // For URL or file link
+  fileName        String? // For file uploads
+  fileType        String? // pdf, docx, txt, etc.
+  crawlDepth      Int? // For URL crawls
+  maxPages        Int? // User-configurable limit
+  content         String?            @db.Text // For text paste
+  totalPages      Int                @default(0)
+  rulesDiscovered Int                @default(0)
+  createdBy       String
+  discoveredRules DiscoveredRule[]
+  brand           Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  completedAt     DateTime?
+
+  @@index([brandId])
+  @@index([status])
+  @@index([brandId, status])
+}
+
+model DiscoveredRule {
+  id             String               @id @default(cuid())
+  learnSessionId String
+  brandId        String
+  ruleType       RuleType
+  name           String
+  description    String               @db.Text
+  rationale      String?              @db.Text // Why this rule exists based on content
+  examples       Json? // { do: string[], dont: string[] }
+  confidence     Float // 0-1, AI confidence score
+  evidence       Json? // Array of text snippets that support this rule
+  conflictsWith  String[] // Array of existing rule IDs if conflicts exist
+  status         DiscoveredRuleStatus @default(PENDING)
+  acceptedRuleId String? // If accepted, link to created Rule
+  metadata       Json? // Additional discovery metadata
+  brand          Brand                @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  learnSession   LearnSession         @relation(fields: [learnSessionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([learnSessionId])
+  @@index([brandId])
+  @@index([status])
+  @@index([ruleType])
+  @@index([learnSessionId, status])
+}
+
+// Repository models for brand copy intelligence
+enum ChunkStatus {
+  INFERRED
+  APPROVED
+  DEPRECATED
+}
+
+enum ChunkSource {
+  WEBSITE_CRAWL
+  DOCUMENT_UPLOAD
+  MANUAL
+  GENERATED
+}
+
+model RepositoryChunk {
+  id              String       @id @default(cuid())
+  brandId         String
+  text            String       @db.Text
+  normalisedText  String       @db.Text // Normalised version for comparison
+  embedding       Unsupported("vector(1536)")? // pgvector embedding
+  category        String? // Headlines, CTAs, Product copy, Legal, Boilerplate, etc.
+  subCategory     String?
+  channel         String? // Web, iOS, Android, Social, etc.
+  intent          String? // announce, persuade, explain, reassure, legal
+  toneTags        String[] // Array of tone descriptors
+  status          ChunkStatus  @default(INFERRED)
+  source          ChunkSource
+  sourceId        String? // Reference to LearnSession, Document, etc.
+  sourceUrl       String? // Original URL if from crawl
+  sourcePage      String? // Page number or section if from document
+  confidenceScore Float? // 0-1, AI confidence in classification
+  clusterId       String? // Reference to cluster
+  canonical       Boolean      @default(false) // Is this the canonical version?
+  locked          Boolean      @default(false) // Immutable if locked
+  usageCount      Int          @default(0)
+  lastUsedAt      DateTime?
+  metadata        Json? // Additional context
+  brand           Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  cluster         RepositoryCluster? @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  approvedAt      DateTime?
+  approvedBy      String? // User ID
+  deprecatedAt    DateTime?
+  deprecatedBy    String? // User ID
+
+  @@index([brandId])
+  @@index([status])
+  @@index([category])
+  @@index([intent])
+  @@index([source])
+  @@index([clusterId])
+  @@index([canonical])
+  @@index([brandId, status])
+  @@index([brandId, category])
+  @@index([brandId, clusterId])
+  @@index([usageCount])
+  @@index([lastUsedAt])
+}
+
+model RepositoryCluster {
+  id              String            @id @default(cuid())
+  brandId         String
+  conceptSummary  String?           @db.Text // AI-generated summary of the concept
+  canonicalChunkId String? // Reference to canonical chunk
+  variantCount    Int               @default(0)
+  conflictFlags   String[] // Array of conflict indicators
+  metadata        Json? // Additional cluster info
+  brand           Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  chunks          RepositoryChunk[]
+  conflicts       RepositoryConflict[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([brandId])
+  @@index([canonicalChunkId])
+  @@index([brandId, canonicalChunkId])
+}
+
+model RepositoryConflict {
+  id          String            @id @default(cuid())
+  brandId     String
+  clusterId   String
+  chunkId1    String
+  chunkId2    String
+  conflictType String // "meaning", "tone", "channel", "constraint"
+  description String            @db.Text
+  severity    String            @default("medium") // low, medium, high
+  resolved    Boolean           @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String? // User ID
+  metadata    Json?
+  brand       Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  cluster     RepositoryCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([brandId])
+  @@index([clusterId])
+  @@index([resolved])
+  @@index([brandId, resolved])
+}
+
+enum ApprovedCopySource {
+  FIXED_FROM_LINT
+  FIXED_FROM_AUDIT
+  MANUAL_ENTRY
+  TONE_ASSET
+  REWRITE_ACCEPTED
+}
+
+enum CopySuggestionMatchType {
+  SEMANTIC
+  KEYWORD
+  HYBRID
+}
+
+enum CopySuggestionContext {
+  LINT
+  AUDIT
+  REWRITE
+  GENERATE
+}
+
+enum BrandLLMModelStatus {
+  TRAINING
+  READY
+  FAILED
+  DEPRECATED
+}
+
+model ApprovedCopy {
+  id          String                       @id @default(cuid())
+  brandId     String
+  text        String                       @db.Text // The approved copy snippet
+  source      ApprovedCopySource
+  sourceId    String? // Reference to Finding/AuditIssue/ManualEntry
+  context     String? // ui, marketing, support
+  surface     String? // Marketing site, App UI, etc.
+  channel     String? // Web, iOS, Android, etc.
+  locale      String? // en-GB, en-US, etc.
+  tags        String[] // For categorization
+  metadata    Json? // Additional info (original text, rule applied, etc.)
+  embedding   Unsupported("vector(1536)")? // Vector embedding for semantic search (pgvector)
+  approvedBy  String // User ID who approved this
+  approvedAt  DateTime                     @default(now())
+  usageCount  Int                          @default(0) // How often it's been suggested/applied
+  brand       Brand                        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  findings    Finding[]
+  auditIssues AuditIssue[]
+  suggestions CopySuggestion[]
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  @@index([brandId])
+  @@index([source])
+  @@index([context])
+  @@index([brandId, context])
+  @@index([brandId, source])
+  @@index([approvedAt])
+}
+
+model RejectedCopy {
+  id          String                       @id @default(cuid())
+  brandId     String
+  originalText String                       @db.Text // The original text before revision
+  revisedText String                       @db.Text // The revised text that was rejected
+  ruleKey     String? // Which rule triggered this change
+  reason      String? @db.Text // The reason given for the change
+  source      ApprovedCopySource
+  sourceId    String? // Reference to Finding/AuditIssue/ManualEntry
+  context     String? // ui, marketing, support
+  surface     String? // Marketing site, App UI, etc.
+  channel     String? // Web, iOS, Android, etc.
+  locale      String? // en-GB, en-US, etc.
+  metadata    Json? // Additional info
+  rejectedBy  String // User ID who rejected this
+  rejectedAt  DateTime                     @default(now())
+  brand       Brand                        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  @@index([brandId])
+  @@index([source])
+  @@index([context])
+  @@index([brandId, context])
+  @@index([brandId, source])
+  @@index([rejectedAt])
+}
+
+model BrandLLMModel {
+  id                String              @id @default(cuid())
+  brandId           String
+  version           Int                 @default(1)
+  modelId           String? // OpenAI fine-tuned model ID
+  trainingDataCount Int                 @default(0)
+  status            BrandLLMModelStatus @default(TRAINING)
+  errorMessage      String?             @db.Text
+  brand             Brand               @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt         DateTime            @default(now())
+  trainedAt         DateTime?
+  deprecatedAt      DateTime?
+
+  @@unique([brandId, version], name: "brandId_version")
+  @@index([brandId])
+  @@index([status])
+  @@index([brandId, status])
+}
+
+model CopySuggestion {
+  id              String                  @id @default(cuid())
+  brandId         String
+  approvedCopyId  String
+  suggestedFor    String                  @db.Text // Text that triggered the suggestion
+  similarityScore Float // 0-1 similarity score
+  matchType       CopySuggestionMatchType
+  applied         Boolean                 @default(false)
+  appliedAt       DateTime?
+  context         CopySuggestionContext // Where it was suggested
+  metadata        Json? // Additional context (rule applied, etc.)
+  brand           Brand                   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  approvedCopy    ApprovedCopy            @relation(fields: [approvedCopyId], references: [id], onDelete: Cascade)
+  createdAt       DateTime                @default(now())
+
+  @@index([brandId])
+  @@index([approvedCopyId])
+  @@index([applied])
+  @@index([brandId, applied])
+  @@index([createdAt])
+}
+
+// Brand Assets models
+model BrandColor {
+  id        String   @id @default(cuid())
+  brandId   String
+  name      String
+  variant   String   // e.g., "Primary", "Secondary", "Light", "Dark"
+  hex       String   // Hex color code (required)
+  cmykC     Int?     // CMYK Cyan (0-100)
+  cmykM     Int?     // CMYK Magenta (0-100)
+  cmykY     Int?     // CMYK Yellow (0-100)
+  cmykK     Int?     // CMYK Black (0-100)
+  pantone   String?  // Pantone code
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([variant])
+  @@index([brandId, variant])
+}
+
+model BrandFont {
+  id          String   @id @default(cuid())
+  brandId     String
+  name        String
+  variant     String   // e.g., "Regular", "Bold", "Light", "Italic"
+  downloadUrl String?  // URL to download font (Dropbox/Drive/etc.)
+  fileUrl     String?  // Stored file URL if uploaded locally
+  fileType    String?  // Font file type (woff2, ttf, otf, woff)
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([variant])
+  @@index([brandId, variant])
+}
+
+model BrandLogo {
+  id        String   @id @default(cuid())
+  brandId   String
+  name      String
+  variant   String   // e.g., "Full", "Icon", "Wordmark", "Horizontal"
+  format    String   // "SVG" or "PNG"
+  usage     String   // "print" or "web"
+  fileUrl   String   // File URL (local upload or external URL to Dropbox/Drive)
+  fileSize  Int?     // File size in bytes
+  width     Int?     // Image width in pixels
+  height    Int?     // Image height in pixels
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([format])
+  @@index([usage])
+  @@index([brandId, format])
+  @@index([brandId, usage])
+}
