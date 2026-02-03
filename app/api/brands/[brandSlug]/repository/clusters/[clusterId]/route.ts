@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasBrandAccess } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getBrandIdFromSlug } from "@/lib/db/brand";
 import { z } from "zod";
 
 export const runtime = "nodejs";
