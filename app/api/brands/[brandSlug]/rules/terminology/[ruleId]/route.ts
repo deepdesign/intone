@@ -55,7 +55,7 @@ export async function PATCH(
     console.error("Error updating custom rule:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: error.issues }, { status: 400 });
     }
 
     const errorMessage = error instanceof Error ? error.message : "Internal server error";

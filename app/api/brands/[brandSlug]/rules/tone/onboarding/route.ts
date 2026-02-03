@@ -200,7 +200,7 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid input", details: (error as z.ZodError).errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: (error as z.ZodError).issues }, { status: 400 });
     }
     console.error("Error saving onboarding progress:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
