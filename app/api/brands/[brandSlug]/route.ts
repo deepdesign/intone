@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasBrandAccess } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getBrandIdFromSlug } from "@/lib/db/brand";
 import { z } from "zod";
 
 // Use Node.js runtime for Prisma adapter
@@ -13,7 +14,7 @@ const updateBrandSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandSlug: string }> }
 ) {
   try {
     const user = await getCurrentUser(req);
@@ -21,10 +22,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { brandId } = await params;
-
-    // OPTIMIZATION: Extract org IDs from user object (already loaded)
+    const { brandSlug } = await params;
     const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
+
     const hasAccess = await hasBrandAccess(user.id, brandId, userOrgIds);
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -56,7 +60,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandSlug: string }> }
 ) {
   try {
     const user = await getCurrentUser(req);
@@ -64,10 +68,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { brandId } = await params;
-
-    // OPTIMIZATION: Extract org IDs from user object (already loaded)
+    const { brandSlug } = await params;
     const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
+
     const hasAccess = await hasBrandAccess(user.id, brandId, userOrgIds);
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -93,7 +100,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandSlug: string }> }
 ) {
   try {
     const user = await getCurrentUser(req);
@@ -101,7 +108,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { brandId } = await params;
+    const { brandSlug } = await params;
+    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
 
     const brand = await prisma.brand.findUnique({
       where: { id: brandId },

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasBrandAccess } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getBrandIdFromSlug } from "@/lib/db/brand";
 
 export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandSlug: string }> }
 ) {
   try {
     const user = await getCurrentUser(req);
@@ -14,9 +15,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { brandId } = await params;
+    const { brandSlug } = await params;
+    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
 
-    // Check brand access
     const hasAccess = await hasBrandAccess(user.id, brandId);
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
