@@ -76,7 +76,7 @@ npm install
 
 ### 2. Environment
 
-Copy `.env.example` to `.env` and fill in your values. **Never commit `.env` or real credentials** — it is gitignored; only `.env.example` (placeholders) is tracked.
+Copy `.env.example` to `.env` and fill in your values. **Never commit `.env` or real credentials** — it is gitignored; only `.env.example` (placeholders) is tracked. If you ever exposed an API key (e.g. by committing it), revoke it immediately in the provider’s dashboard, create a new key, and put the new key only in `.env`. See [SECURITY.md](SECURITY.md).
 
 ```bash
 cp .env.example .env
@@ -229,11 +229,14 @@ intone/
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
 | `npm run db:generate` | Generate Prisma client |
-| `npm run db:migrate` | Run migrations (interactive) |
+| `npm run db:migrate` | Run migrations (interactive; dev only) |
+| `npm run db:deploy` | Run migrations in production (non-interactive) |
 | `npm run db:seed` | Seed rule definitions |
 | `npm run db:studio` | Open Prisma Studio (DB GUI) |
 | `npm run check:hygiene` | Run code hygiene checks (see CODE_HYGIENE_CHECKLIST.md) |
 | `npm run setup:env` | Interactive .env setup (Node script) |
+
+On the VPS, after first-time setup, run `./scripts/deploy-vps.sh` from the project root to pull, build, and restart (see [DEPLOY_VPS.md](DEPLOY_VPS.md)).
 
 ---
 
@@ -241,6 +244,7 @@ intone/
 
 - [QUICK_START.md](QUICK_START.md) — Short setup guide  
 - [TESTING_GUIDE.md](TESTING_GUIDE.md) — How to test the app  
+- [DEPLOY_VPS.md](DEPLOY_VPS.md) — Deploy to a VPS (e.g. Hostinger)  
 - [CODE_HYGIENE_CHECKLIST.md](CODE_HYGIENE_CHECKLIST.md) — Code quality and structure checklist  
 - [.env.example](.env.example) — Environment variable template  
 
@@ -248,7 +252,8 @@ intone/
 
 ## Deployment
 
-- **Vercel** — Connect the repo; set env vars in Project Settings (same as `.env`). Use Neon (or another Postgres) and ensure `NEXTAUTH_URL` is your production URL.
+- **VPS (e.g. Hostinger)** — See [DEPLOY_VPS.md](DEPLOY_VPS.md). Production URL: `https://intone.jamescutts.me`; set `NEXTAUTH_URL` and Google OAuth redirect URI accordingly.
+- **Vercel** — Connect the repo; set env vars in Project Settings (same as `.env`). Use Neon (or another Postgres) and set `NEXTAUTH_URL` to your app URL.
 - **Other hosts** — Build with `npm run build`, run `npm run start`. Set all env vars; run migrations (e.g. `npx prisma migrate deploy`) and optionally seed.
 
 ---

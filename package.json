@@ -13,6 +13,7 @@
     "setup:env": "node scripts/setup-env.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "create-test-user": "tsx scripts/create-test-user.ts",

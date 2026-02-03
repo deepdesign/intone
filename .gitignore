@@ -24,7 +24,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # -----------------------------------------------------------------------------
-# Secrets & local env — never commit these
+# Secrets & local env — never commit these (GOOGLE_CLIENT_SECRET, OPENAI_API_KEY, etc.)
 # -----------------------------------------------------------------------------
 .env
 .env.*
