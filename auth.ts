@@ -113,22 +113,26 @@ function createAdapter() {
   }
 }
 
-// Validate required environment variables
-console.log("Validating NextAuth configuration...");
-if (!process.env.GOOGLE_CLIENT_ID) {
-  console.error("ERROR: GOOGLE_CLIENT_ID is not set");
-  throw new Error("GOOGLE_CLIENT_ID is not set");
+// Validate required environment variables at runtime; skip throwing during Next.js build
+// so build can complete (Hostinger build has no .env; runtime does).
+const isBuild = typeof process.env.NEXT_PHASE !== "undefined" && process.env.NEXT_PHASE === "phase-production-build";
+if (!isBuild) {
+  console.log("Validating NextAuth configuration...");
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    console.error("ERROR: GOOGLE_CLIENT_ID is not set");
+    throw new Error("GOOGLE_CLIENT_ID is not set");
+  }
+  if (!process.env.GOOGLE_CLIENT_SECRET) {
+    console.error("ERROR: GOOGLE_CLIENT_SECRET is not set");
+    throw new Error("GOOGLE_CLIENT_SECRET is not set");
+  }
+  if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+    console.error("ERROR: AUTH_SECRET or NEXTAUTH_SECRET must be set");
+    throw new Error("AUTH_SECRET or NEXTAUTH_SECRET must be set");
+  }
+  console.log("Environment variables validated successfully");
 }
-if (!process.env.GOOGLE_CLIENT_SECRET) {
-  console.error("ERROR: GOOGLE_CLIENT_SECRET is not set");
-  throw new Error("GOOGLE_CLIENT_SECRET is not set");
-}
-const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-if (!authSecret) {
-  console.error("ERROR: AUTH_SECRET or NEXTAUTH_SECRET must be set");
-  throw new Error("AUTH_SECRET or NEXTAUTH_SECRET must be set");
-}
-console.log("Environment variables validated successfully");
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || (isBuild ? "build-placeholder-secret" : undefined);
 
 console.log("Initializing NextAuth...");
 let adapter;
@@ -146,13 +150,13 @@ try {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: adapter,
-  secret: authSecret,
+  secret: authSecret ?? "build-placeholder-secret",
   trustHost: true, // Required for NextAuth v5 in development
   basePath: "/api/auth", // Explicit base path for auth routes
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || (isBuild ? "build-placeholder" : ""),
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || (isBuild ? "build-placeholder" : ""),
       authorization: {
         params: {
           prompt: "consent",
