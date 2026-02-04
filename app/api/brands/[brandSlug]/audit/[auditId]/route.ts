@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import { getBrandIdFromSlug } from "@/lib/db/brand";
 
 const ISSUE_STATUSES = ["PENDING", "REVIEWED", "FIXED", "IGNORED"] as const;
 type IssueStatus = (typeof ISSUE_STATUSES)[number];
-import { getCurrentUser } from "@/lib/auth";
-import { getBrandIdFromSlug } from "@/lib/db/brand";
 
 export const runtime = "nodejs";
 
