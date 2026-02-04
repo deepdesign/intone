@@ -61,7 +61,7 @@ export async function GET(
 
     // Fetch chunk details for conflicts
     const conflictsWithChunks = await Promise.all(
-      conflicts.map(async (conflict) => {
+      conflicts.map(async (conflict: { chunkId1: string; chunkId2: string }) => {
         const [chunk1, chunk2] = await Promise.all([
           prisma.repositoryChunk.findUnique({
             where: { id: conflict.chunkId1 },
