@@ -232,7 +232,7 @@ async function processPageContent(
   // Create audit issues
   for (const issue of issues) {
     // Find the rule
-    const rule = rules.find((r) => r.key === issue.ruleKey || r.name === issue.ruleKey);
+    const rule = rules.find((r: { id: string; key: string | null; name: string }) => r.key === issue.ruleKey || r.name === issue.ruleKey);
     if (!rule) continue;
 
     // Extract context (50 chars before/after)
