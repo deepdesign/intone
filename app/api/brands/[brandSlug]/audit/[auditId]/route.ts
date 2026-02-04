@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { IssueStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+
+const ISSUE_STATUSES = ["PENDING", "REVIEWED", "FIXED", "IGNORED"] as const;
+type IssueStatus = (typeof ISSUE_STATUSES)[number];
 import { getCurrentUser } from "@/lib/auth";
 import { getBrandIdFromSlug } from "@/lib/db/brand";
 
@@ -122,7 +124,7 @@ export async function PATCH(
     const { issueId, status, notes } = body;
 
     if (issueId) {
-      if (!Object.values(IssueStatus).includes(status)) {
+      if (typeof status !== "string" || !ISSUE_STATUSES.includes(status as IssueStatus)) {
         return NextResponse.json(
           { error: "Invalid status" },
           { status: 400 }
