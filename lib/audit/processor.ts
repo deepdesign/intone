@@ -391,7 +391,7 @@ async function finalizeAudit(auditId: string, totalPages: number): Promise<void>
   const issuesByCategory: Record<string, number> = {};
   const issuesBySeverity: Record<string, number> = {};
 
-  issues.forEach((issue) => {
+  issues.forEach((issue: { category?: string | null; severity: string }) => {
     const category = issue.category || "other";
     issuesByCategory[category] = (issuesByCategory[category] || 0) + 1;
     issuesBySeverity[issue.severity] = (issuesBySeverity[issue.severity] || 0) + 1;
