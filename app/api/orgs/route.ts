@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
       },
     });
     
-    const orgIds = memberships.map((m) => m.orgId);
+    const orgIds = memberships.map((m: { orgId: string }) => m.orgId);
     console.log("GET /api/orgs - Found org IDs:", orgIds);
     
     if (orgIds.length === 0) {
