@@ -62,6 +62,10 @@ function createAdapter() {
     console.log("Edge runtime detected, skipping adapter creation");
     return undefined;
   }
+  // Skip adapter creation during Next.js build (no DATABASE_URL in build env)
+  if (typeof process.env.NEXT_PHASE !== "undefined" && process.env.NEXT_PHASE === "phase-production-build") {
+    return undefined;
+  }
   
   try {
     console.log("Creating Prisma adapter...");

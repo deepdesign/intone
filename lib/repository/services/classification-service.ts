@@ -5,8 +5,9 @@
 
 import OpenAI from "openai";
 
+const isBuild = typeof process.env.NEXT_PHASE !== "undefined" && process.env.NEXT_PHASE === "phase-production-build";
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || (isBuild ? "build-placeholder" : ""),
 });
 
 export interface ClassificationResult {

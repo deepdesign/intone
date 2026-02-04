@@ -1,7 +1,9 @@
 import OpenAI from "openai";
 
+// Defer constructor so build (no OPENAI_API_KEY) doesn't throw; placeholder key during build
+const isBuild = typeof process.env.NEXT_PHASE !== "undefined" && process.env.NEXT_PHASE === "phase-production-build";
 export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY || (isBuild ? "build-placeholder" : ""),
 });
 
 /**
