@@ -67,7 +67,7 @@ export async function getUserOrgs(userId: string) {
     },
   });
 
-  return memberships.map((m) => m.org);
+  return memberships.map((m: { org: { id: string; name: string; slug: string; brands: unknown[] } }) => m.org);
 }
 
 export async function getUserBrands(userId: string) {
@@ -82,7 +82,7 @@ export async function getUserBrands(userId: string) {
     },
   });
 
-  return memberships.flatMap((m) => m.org.brands);
+  return memberships.flatMap((m: { org: { brands: unknown[] } }) => m.org.brands);
 }
 
 export async function hasOrgAccess(userId: string, orgId: string): Promise<boolean> {
