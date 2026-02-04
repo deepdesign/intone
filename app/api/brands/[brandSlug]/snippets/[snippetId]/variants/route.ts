@@ -22,7 +22,7 @@ export async function POST(
     }
 
     const { brandSlug, snippetId } = await params;
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {

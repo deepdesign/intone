@@ -49,7 +49,7 @@ export async function GET(
     const { brandSlug, ruleId } = await params;
 
     // OPTIMIZATION: Extract org IDs from user object (already loaded)
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
@@ -99,7 +99,7 @@ export async function PUT(
     const { brandSlug, ruleId } = await params;
 
     // OPTIMIZATION: Extract org IDs from user object
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
@@ -177,7 +177,7 @@ export async function PATCH(
     const { brandSlug, ruleId } = await params;
 
     // OPTIMIZATION: Extract org IDs from user object (already loaded)
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
@@ -238,7 +238,7 @@ export async function DELETE(
     const { brandSlug, ruleId } = await params;
 
     // OPTIMIZATION: Extract org IDs from user object (already loaded)
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {

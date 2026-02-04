@@ -22,7 +22,7 @@ export async function GET(
     }
 
     const { brandSlug, clusterId } = await params;
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
@@ -79,7 +79,7 @@ export async function PUT(
     }
 
     const { brandSlug, clusterId } = await params;
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {

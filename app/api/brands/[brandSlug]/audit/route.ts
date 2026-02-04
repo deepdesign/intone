@@ -58,7 +58,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
@@ -141,7 +141,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {

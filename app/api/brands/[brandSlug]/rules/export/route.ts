@@ -19,7 +19,7 @@ export async function GET(
     const { brandSlug } = await params;
     const { searchParams } = new URL(req.url);
     const format = searchParams.get("format") || "markdown"; // markdown or json
-    const userOrgIds = user.memberships?.map((m) => m.orgId) || [];
+    const userOrgIds = user.memberships?.map((m: { orgId: string }) => m.orgId) || [];
     const brandId = await getBrandIdFromSlug(brandSlug, userOrgIds);
 
     if (!brandId) {
