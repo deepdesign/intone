@@ -35,7 +35,7 @@ export async function BrandRulesServer({ brandId }: BrandRulesServerProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {rules.map((rule) => (
+          {rules.map((rule: { id: string; name: string; description: string | null }) => (
             <Card key={rule.id}>
               <CardHeader>
                 <CardTitle>{rule.name}</CardTitle>
