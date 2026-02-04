@@ -28,12 +28,12 @@ export default function ConfidenceStep({ initialValues, onNext, onBack, loading,
     onNext({ "tone.confidence": confidence });
   };
 
-  const examples = [
-    "This might help improve your results.",
-    "This may help improve your results.",
-    "This should help improve your results.",
-    "This will help improve your results.",
-    "This will improve your results.",
+  const examples: string[][] = [
+    ["This might help improve your results."],
+    ["This may help improve your results."],
+    ["This should help improve your results."],
+    ["This will help improve your results."],
+    ["This will improve your results."],
   ];
 
   const labels = ["Very Careful", "Careful", "Balanced", "Assertive", "Very Assertive"];

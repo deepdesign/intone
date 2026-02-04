@@ -1,4 +1,4 @@
-import { RuleDefinition } from "./types";
+import { RuleDefinition } from "./definitions";
 
 export interface OnboardingStep {
   id: string;

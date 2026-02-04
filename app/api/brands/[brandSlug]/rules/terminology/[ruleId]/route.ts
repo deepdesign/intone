@@ -39,18 +39,39 @@ export async function PATCH(
     const body = await req.json();
     const data = updateCustomRuleSchema.parse(body);
 
-    const customRule = await prisma.customRule.update({
+    const existing = await prisma.rule.findFirst({
+      where: { id: ruleId, brandId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Rule not found" }, { status: 404 });
+    }
+
+    const typeMap = {
+      forbidden: "FORBIDDEN_WORDS" as const,
+      preferred: "TERMINOLOGY" as const,
+      replacement: "TERMINOLOGY" as const,
+      formatting: "FORMATTING" as const,
+    };
+    const valueUpdate =
+      data.pattern !== undefined || data.replacement !== undefined || data.appliesTo !== undefined
+        ? {
+            ...(typeof existing.value === "object" && existing.value !== null && !Array.isArray(existing.value) ? (existing.value as Record<string, unknown>) : {}),
+            ...(data.pattern !== undefined && { pattern: data.pattern }),
+            ...(data.replacement !== undefined && { replacement: data.replacement }),
+            ...(data.appliesTo !== undefined && { appliesTo: data.appliesTo }),
+          }
+        : undefined;
+
+    const rule = await prisma.rule.update({
       where: { id: ruleId },
       data: {
-        ...(data.type && { type: data.type }),
+        ...(data.type && { type: typeMap[data.type] }),
         ...(data.description && { description: data.description }),
-        ...(data.pattern !== undefined && { pattern: data.pattern }),
-        ...(data.replacement !== undefined && { replacement: data.replacement }),
-        ...(data.appliesTo && { appliesTo: data.appliesTo }),
+        ...(valueUpdate !== undefined && { value: valueUpdate }),
       },
     });
 
-    return NextResponse.json(customRule);
+    return NextResponse.json(rule);
   } catch (error) {
     console.error("Error updating custom rule:", error);
 
@@ -91,7 +112,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.customRule.delete({
+    const existing = await prisma.rule.findFirst({
+      where: { id: ruleId, brandId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Rule not found" }, { status: 404 });
+    }
+    await prisma.rule.delete({
       where: { id: ruleId },
     });
 

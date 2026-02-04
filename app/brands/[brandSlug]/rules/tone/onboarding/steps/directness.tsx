@@ -28,12 +28,12 @@ export default function DirectnessStep({ initialValues, onNext, onBack, loading,
     onNext({ "tone.directness": directness });
   };
 
-  const examples = [
-    "Oops! That email address doesn't look quite right. Could you double-check it for us?",
-    "That email address doesn't look quite right. Could you double-check it?",
-    "Please enter a valid email address.",
-    "Invalid email address.",
-    "Email invalid.",
+  const examples: string[][] = [
+    ["Oops! That email address doesn't look quite right. Could you double-check it for us?"],
+    ["That email address doesn't look quite right. Could you double-check it?"],
+    ["Please enter a valid email address."],
+    ["Invalid email address."],
+    ["Email invalid."],
   ];
 
   const labels = ["Very Expressive", "Expressive", "Neutral", "Direct", "Very Direct"];

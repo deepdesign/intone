@@ -26,12 +26,12 @@ export default function EnthusiasmStep({ initialValues, onNext, onBack, loading,
     onNext({ "tone.enthusiasm": enthusiasm });
   };
 
-  const examples = [
-    "Your request has been processed.",
-    "We've processed your request.",
-    "Great! We've processed your request.",
-    "Excellent! We've successfully processed your request.",
-    "Amazing! We're thrilled to let you know your request has been processed successfully!",
+  const examples: string[][] = [
+    ["Your request has been processed."],
+    ["We've processed your request."],
+    ["Great! We've processed your request."],
+    ["Excellent! We've successfully processed your request."],
+    ["Amazing! We're thrilled to let you know your request has been processed successfully!"],
   ];
 
   const labels = ["Very Low", "Low", "Neutral", "High", "Very High"];

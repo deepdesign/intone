@@ -163,22 +163,15 @@ export function AuditIssueDetail({ issue, onClose, onStatusChange }: AuditIssueD
               </div>
               <div className="flex gap-2">
                 <ApproveCopyButton
-                  brandId={brandId}
-                  text={issue.suggestedFix}
-                  source="FIXED_FROM_AUDIT"
-                  sourceId={issue.id}
-                  context={issue.category || undefined}
+                  onApprove={() => {
+                    // TODO: ingest issue.suggestedFix into repository (brandId, source FIXED_FROM_AUDIT, sourceId issue.id, context issue.category)
+                  }}
+                  disabled={false}
                 />
               </div>
               <CopySuggestion
-                brandId={brandId}
-                queryText={issue.issueText}
-                context="AUDIT"
-                onApply={(text) => {
-                  // Update the suggested fix
-                  // Note: This would need to be handled via API to update the issue
-                  copyToClipboard(text);
-                }}
+                suggestion={issue.suggestedFix ?? ""}
+                onAccept={() => copyToClipboard(issue.suggestedFix ?? "")}
               />
             </div>
           )}

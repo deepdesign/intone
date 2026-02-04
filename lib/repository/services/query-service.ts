@@ -71,7 +71,7 @@ export class RepositoryQueryService {
     // Fetch chunks with embeddings
     // Note: In production, use pgvector's cosine similarity operator
     // For now, we'll fetch and calculate in memory
-    const chunks = await prisma.repositoryChunk.findMany({
+    const chunks = (await prisma.repositoryChunk.findMany({
       where,
       select: {
         id: true,
@@ -83,9 +83,9 @@ export class RepositoryQueryService {
         canonical: true,
         status: true,
         usageCount: true,
-      },
+      } as { id: true; text: true; category: true; intent: true; channel: true; canonical: true; status: true; usageCount: true },
       take: 100, // Limit initial fetch for performance
-    });
+    })) as { id: string; text: string; embedding?: unknown; category: string | null; intent: string | null; channel: string | null; canonical: boolean; status: string; usageCount: number }[];
 
     // Calculate similarities
     const results: QueryResult[] = [];

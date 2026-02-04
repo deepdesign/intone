@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
       name: user.name,
       email: user.email,
       image: user.image,
-      emailVerified: user.emailVerified,
     });
   } catch (error) {
     console.error("Error fetching user:", error);

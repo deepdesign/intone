@@ -21,6 +21,8 @@ export interface RewriteResponse {
     severity: string;
   }>;
   trimmedToFit?: boolean;
+  referencedChunks?: string[];
+  groundedInRepository?: boolean;
 }
 
 export interface LintResponse {
@@ -51,6 +53,8 @@ export function parseRewriteResponse(data: any): RewriteResponse {
     appliedRules: Array.isArray(data.appliedRules) ? data.appliedRules : undefined,
     violationsInInput: Array.isArray(data.violationsInInput) ? data.violationsInInput : undefined,
     trimmedToFit: data.trimmedToFit ?? false,
+    referencedChunks: Array.isArray(data.referencedChunks) ? data.referencedChunks : undefined,
+    groundedInRepository: data.groundedInRepository ?? undefined,
   };
 }
 

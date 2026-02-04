@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { RepositoryChunk } from "@prisma/client";
 import { getCurrentUser, hasBrandAccess } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getBrandIdFromSlug } from "@/lib/db/brand";
@@ -64,21 +65,27 @@ export async function POST(
     const embeddings = await EmbeddingService.generateEmbeddings(texts);
 
     // Step 3: Check for duplicates and similar chunks
-    const existingChunks = await prisma.repositoryChunk.findMany({
+    const existingChunks = (await prisma.repositoryChunk.findMany({
       where: {
         brandId,
         status: { not: "DEPRECATED" },
       },
+      // embedding is Unsupported(pgvector) so not in generated Select type
       select: {
         id: true,
         embedding: true,
         text: true,
-      },
+      } as { id: true; text: true },
       take: 1000, // Limit for performance
-    });
+    })) as { id: string; text: string; embedding?: unknown }[];
 
     // Step 4: Create chunks and detect similarities
-    const createdChunks = [];
+    type ChunkWithSimilar = RepositoryChunk & {
+      duplicates: Array<{ id: string; similarity: number }>;
+      nearDuplicates: Array<{ id: string; similarity: number }>;
+      related: Array<{ id: string; similarity: number }>;
+    };
+    const createdChunks: ChunkWithSimilar[] = [];
     const similarityThresholds = {
       duplicate: 0.92,
       nearDuplicate: 0.85,
@@ -102,28 +109,29 @@ export async function POST(
         similarityThresholds
       );
 
-      // Create chunk
+      // Create chunk (embedding is Unsupported in schema so cast data)
+      const createData = {
+        brandId,
+        text: chunk.text,
+        normalisedText: chunk.normalisedText,
+        embedding: JSON.stringify(embedding), // Store as JSON string for now
+        category: classification.category,
+        subCategory: classification.subCategory,
+        channel: classification.channel,
+        intent: classification.intent,
+        toneTags: classification.toneTags,
+        status: data.source === "MANUAL" ? ("APPROVED" as const) : ("INFERRED" as const),
+        source: data.source,
+        sourceId: data.sourceId,
+        sourceUrl: data.sourceUrl,
+        sourcePage: data.sourcePage,
+        confidenceScore: classification.confidenceScore,
+        approvedBy: data.source === "MANUAL" ? user.id : null,
+        approvedAt: data.source === "MANUAL" ? new Date() : null,
+        metadata: chunk.metadata,
+      };
       const created = await prisma.repositoryChunk.create({
-        data: {
-          brandId,
-          text: chunk.text,
-          normalisedText: chunk.normalisedText,
-          embedding: JSON.stringify(embedding), // Store as JSON string for now
-          category: classification.category,
-          subCategory: classification.subCategory,
-          channel: classification.channel,
-          intent: classification.intent,
-          toneTags: classification.toneTags,
-          status: data.source === "MANUAL" ? "APPROVED" : "INFERRED",
-          source: data.source,
-          sourceId: data.sourceId,
-          sourceUrl: data.sourceUrl,
-          sourcePage: data.sourcePage,
-          confidenceScore: classification.confidenceScore,
-          approvedBy: data.source === "MANUAL" ? user.id : null,
-          approvedAt: data.source === "MANUAL" ? new Date() : null,
-          metadata: chunk.metadata,
-        },
+        data: createData as Parameters<typeof prisma.repositoryChunk.create>[0]["data"],
       });
 
       createdChunks.push({

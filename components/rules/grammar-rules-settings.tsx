@@ -62,22 +62,29 @@ export function GrammarRulesSettings() {
     }
   };
 
-  const renderRuleControl = (rule: RuleInstance) => {
-    if (rule.ruleDefinition.controlType === "toggle") {
+  type RuleWithLegacy = Rule & {
+    ruleDefinition?: { controlType?: string; options?: { options?: unknown[] }; defaultValue?: Record<string, unknown>; label?: string; description?: string; examplesGood?: { examples: unknown[] }; examplesBad?: { examples: unknown[] } };
+    enabled?: boolean;
+    appliesTo?: string[];
+  };
+
+  const renderRuleControl = (rule: RuleWithLegacy) => {
+    const ctrl = rule.controlType ?? rule.ruleDefinition?.controlType;
+    if (ctrl === "toggle") {
       return (
         <Switch
-          checked={rule.enabled}
-          onCheckedChange={(checked) => handleUpdate(rule.id, { enabled: checked })}
+          checked={rule.enabled ?? rule.status === "ACTIVE"}
+          onCheckedChange={(checked) => handleUpdate(rule.id, { status: checked ? ("ACTIVE" as RuleStatus) : ("DRAFT" as RuleStatus) })}
         />
       );
     }
 
-    if (rule.ruleDefinition.controlType === "select") {
-      const options = rule.ruleDefinition.options?.options || [];
+    if (ctrl === "select") {
+      const options = (rule.ruleDefinition?.options?.options ?? []) as { value: string; label: string }[];
       return (
         <Select
           value={typeof rule.value === "string" ? rule.value : ""}
-          onValueChange={(value) => handleUpdate(rule.id, { value, enabled: true })}
+          onValueChange={(value) => handleUpdate(rule.id, { value })}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue />
@@ -93,11 +100,9 @@ export function GrammarRulesSettings() {
       );
     }
 
-    if (rule.ruleDefinition.controlType === "list") {
-      const options = rule.ruleDefinition.options?.options || [];
-      // Initialize value from rule definition's defaultValue if not set
-      // For list controls, defaultValue should be an object with keys matching option keys
-      const defaultValue = rule.ruleDefinition.defaultValue || {};
+    if (ctrl === "list") {
+      const options = (rule.ruleDefinition?.options?.options ?? []) as { key?: string; value?: string; label: string; defaultValue?: boolean }[];
+      const defaultValue = rule.ruleDefinition?.defaultValue ?? {};
       const currentValue = rule.value && typeof rule.value === "object" && !Array.isArray(rule.value)
         ? rule.value
         : defaultValue;
@@ -122,7 +127,7 @@ export function GrammarRulesSettings() {
                   onCheckedChange={(checked) => {
                     // Ensure we start with the full current value structure
                     const newValue = { ...currentValue, [optKey]: checked };
-                    handleUpdate(rule.id, { value: newValue, enabled: true });
+                    handleUpdate(rule.id, { value: newValue });
                   }}
                 />
               </div>
@@ -135,9 +140,9 @@ export function GrammarRulesSettings() {
     return null;
   };
 
-  const renderExamples = (rule: RuleInstance) => {
-    const examplesGood = rule.ruleDefinition.examplesGood?.examples || [];
-    const examplesBad = rule.ruleDefinition.examplesBad?.examples || [];
+  const renderExamples = (rule: RuleWithLegacy) => {
+    const examplesGood = rule.ruleDefinition?.examplesGood?.examples ?? (rule.examples?.do ?? []) as unknown[];
+    const examplesBad = rule.ruleDefinition?.examplesBad?.examples ?? (rule.examples?.dont ?? []) as unknown[];
 
     if (examplesGood.length === 0 && examplesBad.length === 0) {
       return null;
@@ -198,56 +203,60 @@ export function GrammarRulesSettings() {
       </div>
 
       <div className="grid gap-4">
-        {rules.map((rule) => (
+        {rules.map((rule) => {
+          const r = rule as RuleWithLegacy;
+          const ctrl = r.controlType ?? r.ruleDefinition?.controlType;
+          const isEnabled = r.enabled ?? r.status === "ACTIVE";
+          return (
           <Card key={rule.id}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">{rule.ruleDefinition.label}</CardTitle>
-                    {rule.enabled && <Badge variant="default">Enabled</Badge>}
-                    {!rule.enabled && <Badge variant="secondary">Disabled</Badge>}
+                    <CardTitle className="text-lg">{r.ruleDefinition?.label ?? rule.name}</CardTitle>
+                    {isEnabled && <Badge variant="default">Enabled</Badge>}
+                    {!isEnabled && <Badge variant="secondary">Disabled</Badge>}
                   </div>
-                  <CardDescription className="mt-1">{rule.ruleDefinition.description}</CardDescription>
+                  <CardDescription className="mt-1">{r.ruleDefinition?.description ?? rule.description}</CardDescription>
                 </div>
-                {rule.ruleDefinition.controlType === "toggle" && (
+                {ctrl === "toggle" && (
                   <Switch
-                    checked={rule.enabled}
-                    onCheckedChange={(checked) => handleUpdate(rule.id, { enabled: checked })}
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => handleUpdate(rule.id, { status: checked ? ("ACTIVE" as RuleStatus) : ("DRAFT" as RuleStatus) })}
                   />
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(rule.ruleDefinition.controlType === "select" || rule.ruleDefinition.controlType === "list") && (
+                {(ctrl === "select" || ctrl === "list") && (
                   <div>
                     <Label className="text-sm font-medium mb-3 block">
-                      {rule.ruleDefinition.controlType === "select" ? "Setting" : "Options"}
+                      {ctrl === "select" ? "Setting" : "Options"}
                     </Label>
-                    {renderRuleControl(rule)}
+                    {renderRuleControl(r)}
                   </div>
                 )}
 
-                {rule.ruleDefinition.controlType === "list" && (
+                {ctrl === "list" && (
                   <div className="pt-2 border-t">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-medium">Enforce this rule</Label>
                       <Switch
-                        checked={rule.enabled}
-                        onCheckedChange={(checked) => handleUpdate(rule.id, { enabled: checked })}
+                        checked={isEnabled}
+                        onCheckedChange={(checked) => handleUpdate(rule.id, { status: checked ? ("ACTIVE" as RuleStatus) : ("DRAFT" as RuleStatus) })}
                       />
                     </div>
                   </div>
                 )}
 
-                {renderExamples(rule)}
+                {renderExamples(r)}
 
-                {rule.appliesTo && rule.appliesTo.length > 0 && (
+                {(r.appliesTo?.length ?? rule.surfaces?.length ?? 0) > 0 && (
                   <div className="pt-4 border-t">
                     <Label className="text-sm font-medium">Applies to:</Label>
                     <div className="flex gap-2 mt-2">
-                      {rule.appliesTo.map((context) => (
+                      {(r.appliesTo ?? rule.surfaces ?? []).map((context) => (
                         <Badge key={context} variant="outline">
                           {context}
                         </Badge>
@@ -258,7 +267,7 @@ export function GrammarRulesSettings() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ); })}
       </div>
     </div>
   );

@@ -16,11 +16,25 @@ const prisma = new PrismaClient({
   log: ["error", "warn"],
 });
 
+/** Seed rule definition shape (from tone-rules, grammar-rules, numbers-rules) */
+type SeedRuleDef = {
+  key?: string;
+  category?: string;
+  controlType?: string;
+  label?: string;
+  description?: string;
+  options?: any;
+  defaultValue?: any;
+  examplesGood?: any;
+  examplesBad?: any;
+  appliesToOptions?: string[];
+};
+
 /**
- * Transform old RuleDefinition format to new Rule format
+ * Transform seed rule definition to Rule create input
  */
 function transformRuleDefinitionToRule(
-  def: Prisma.RuleDefinitionCreateInput,
+  def: SeedRuleDef,
   brandId: string,
   createdBy: string = "system"
 ): Prisma.RuleCreateInput {

@@ -1,16 +1,16 @@
 // Cache for rule definitions to avoid re-importing on every call
-import { getRuleDefinition, RuleDefinition } from "./definitions";
+import { getRuleDefinition as getRuleDefinitionBase, RuleDefinition } from "./definitions";
 
 const cache = new Map<string, RuleDefinition | null>();
 
-export { RuleDefinition };
+export type { RuleDefinition };
 
 export async function getRuleDefinitionCached(key: string): Promise<RuleDefinition | null> {
   if (cache.has(key)) {
     return cache.get(key) || null;
   }
-  
-  const definition = getRuleDefinition(key);
+
+  const definition = getRuleDefinitionBase(key);
   cache.set(key, definition);
   return definition;
 }
@@ -20,8 +20,8 @@ export function getRuleDefinitionSync(key: string): RuleDefinition | null {
   if (cache.has(key)) {
     return cache.get(key) || null;
   }
-  
-  const definition = getRuleDefinition(key);
+
+  const definition = getRuleDefinitionBase(key);
   cache.set(key, definition);
   return definition;
 }

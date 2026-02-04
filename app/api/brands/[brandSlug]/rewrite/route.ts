@@ -186,7 +186,7 @@ export async function POST(
 
     // Append Repository grounding to prompt
     if (grounding.promptAddition) {
-      prompt.systemMessage = (prompt.systemMessage || "") + "\n\n" + grounding.promptAddition;
+      prompt = (prompt || "") + "\n\n" + grounding.promptAddition;
     }
 
     // Fetch user's API key
@@ -325,9 +325,9 @@ export async function POST(
     // Validate and trim if needed
     if (effectiveCharLimit !== null && result.output.length > effectiveCharLimit) {
       if (effectiveStrict) {
-        const trimmed = trimToFit(result.output, channelId || "", true);
-        result.output = trimmed.text;
-        result.trimmedToFit = trimmed.trimmed;
+        const original = result.output;
+        result.output = trimToFit(result.output, effectiveCharLimit);
+        result.trimmedToFit = result.output !== original;
       }
     }
 

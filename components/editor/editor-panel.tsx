@@ -9,11 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Info, CheckCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { CopySuggestion } from "@/components/brand-llm/copy-suggestion";
 import { ApproveCopyButton } from "@/components/brand-llm/approve-copy-button";
-import { RejectCopyButton } from "@/components/brand-llm/reject-copy-button";
 
 interface Change {
   ruleKey: string;
@@ -230,26 +228,20 @@ export function EditorPanel() {
                             </div>
                             <div className="flex gap-2">
                               <ApproveCopyButton
-                                brandId={brandId}
-                                text={issue.suggested}
-                                source="FIXED_FROM_LINT"
-                                context={context}
+                                onApprove={() => {}}
+                                disabled={false}
                               />
                             </div>
                           </div>
                         )}
                       </div>
                       <CopySuggestion
-                        brandId={brandId}
-                        queryText={issue.original}
-                        context="LINT"
-                        onApply={(text) => {
-                          // Update the issue's suggested fix
+                        suggestion={issue.suggested}
+                        onAccept={() => {
                           const updatedIssues = [...issues];
-                          updatedIssues[idx] = { ...issue, suggested: text };
+                          updatedIssues[idx] = { ...issue, suggested: issue.suggested };
                           setIssues(updatedIssues);
                         }}
-                        className="mt-2"
                       />
                     </div>
                   ))}

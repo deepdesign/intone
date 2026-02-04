@@ -32,41 +32,20 @@ export async function getBrandWithRules(brandId: string) {
   return prisma.brand.findUnique({
     where: { id: brandId },
     include: {
-      ruleInstances: {
-        where: { enabled: true },
-        include: {
-          ruleDefinition: true,
-        },
-        orderBy: {
-          priority: "asc",
-        },
-      },
-      customRules: {
-        where: {
-          enabled: true,
-        },
+      rules: {
+        where: { status: "ACTIVE" },
+        orderBy: { priority: "asc" },
       },
     },
   });
 }
 
 export async function getBrandRuleInstances(brandId: string, category?: string) {
-  return prisma.ruleInstance.findMany({
+  return prisma.rule.findMany({
     where: {
       brandId,
-      ...(category
-        ? {
-            ruleDefinition: {
-              category,
-            },
-          }
-        : {}),
+      ...(category ? { category } : {}),
     },
-    include: {
-      ruleDefinition: true,
-    },
-    orderBy: {
-      priority: "asc",
-    },
+    orderBy: { priority: "asc" },
   });
 }

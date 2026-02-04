@@ -28,12 +28,12 @@ export default function FormalityStep({ initialValues, onNext, onBack, loading, 
     onNext({ "tone.formality": formality });
   };
 
-  const examples = [
-    "We've processed your request.",
-    "Your request has been processed.",
-    "We have processed your request.",
-    "We are pleased to inform you that your request has been processed.",
-    "We are pleased to inform you that your request has been processed in accordance with our standard procedures.",
+  const examples: string[][] = [
+    ["We've processed your request."],
+    ["Your request has been processed."],
+    ["We have processed your request."],
+    ["We are pleased to inform you that your request has been processed."],
+    ["We are pleased to inform you that your request has been processed in accordance with our standard procedures."],
   ];
 
   const labels = ["Very Conversational", "Conversational", "Neutral", "Formal", "Very Formal"];

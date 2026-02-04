@@ -25,12 +25,12 @@ export default function EmpathyStep({ initialValues, onNext, onBack, loading, is
     onNext({ "tone.empathy": empathy });
   };
 
-  const examples = [
-    "Error: Invalid email address.",
-    "Invalid email address.",
-    "Please enter a valid email address.",
-    "We couldn't validate that email address. Please check and try again.",
-    "We understand how frustrating it can be when something doesn't work. Let's get that email address sorted together.",
+  const examples: string[][] = [
+    ["Error: Invalid email address."],
+    ["Invalid email address."],
+    ["Please enter a valid email address."],
+    ["We couldn't validate that email address. Please check and try again."],
+    ["We understand how frustrating it can be when something doesn't work. Let's get that email address sorted together."],
   ];
 
   const labels = ["None", "Minimal", "Neutral", "Moderate", "High"];

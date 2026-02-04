@@ -25,12 +25,12 @@ export default function HumourStep({ initialValues, onNext, onBack, loading, isF
     onNext({ "tone.humour": humour });
   };
 
-  const examples = [
-    "Your request has been processed.",
-    "Your request has been processed. (No jokes here!)",
-    "Your request has been processed. We're on it!",
-    "Your request has been processed. We've got you covered!",
-    "Your request has been processed. We're basically wizards at this point! 🎩✨",
+  const examples: string[][] = [
+    ["Your request has been processed."],
+    ["Your request has been processed. (No jokes here!)"],
+    ["Your request has been processed. We're on it!"],
+    ["Your request has been processed. We've got you covered!"],
+    ["Your request has been processed. We're basically wizards at this point! 🎩✨"],
   ];
 
   const labels = ["None", "Minimal", "Light", "Moderate", "High"];

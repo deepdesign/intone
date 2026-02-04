@@ -114,17 +114,17 @@ export async function processFileAudit(
       pages = await parsePDF(fileBuffer);
     } else if (["docx", "doc"].includes(extension) || fileType.includes("word")) {
       content = await parseDOCX(fileBuffer);
-      pages = [{ content, pageNumber: 1 }];
+      pages = [{ url: fileName, content, pageNumber: 1 }];
     } else if (["txt", "md", "html", "htm"].includes(extension)) {
       content = fileBuffer.toString("utf-8");
       if (extension === "html" || extension === "htm") {
         content = extractTextFromHTML(content);
       }
-      pages = [{ content, pageNumber: 1 }];
+      pages = [{ url: fileName, content, pageNumber: 1 }];
     } else {
       // Fallback: try to read as text
       content = fileBuffer.toString("utf-8");
-      pages = [{ content, pageNumber: 1 }];
+      pages = [{ url: fileName, content, pageNumber: 1 }];
     }
 
     // Update total pages
@@ -347,7 +347,7 @@ async function analyzeContentWithRules(
           allIssues.push({
             ruleKey: issue.ruleKey || "unknown",
             original: issue.original,
-            revised: issue.suggested || issue.revised,
+            revised: issue.suggested,
             reason: issue.reason,
             severity: issue.severity || "minor",
             locationStart: contentOffset + location.start,
@@ -483,7 +483,8 @@ async function parsePDF(buffer: Buffer): Promise<ProcessedPage[]> {
       throw new Error("pdf-parse package not installed. Run: npm install pdf-parse");
     }
     
-    const data = await pdfParse.default(buffer);
+    const parseFn = (pdfParse as unknown as { default?: (b: Buffer) => Promise<{ text: string; numpages: number }> }).default ?? (pdfParse as unknown as (b: Buffer) => Promise<{ text: string; numpages: number }>);
+    const data = await parseFn(buffer);
     
     // Split by pages if available
     if (data.numpages > 1) {
@@ -492,14 +493,15 @@ async function parsePDF(buffer: Buffer): Promise<ProcessedPage[]> {
       const textPerPage = Math.ceil(data.text.length / data.numpages);
       for (let i = 0; i < data.numpages; i++) {
         pages.push({
+          url: "",
           content: data.text.substring(i * textPerPage, (i + 1) * textPerPage),
           pageNumber: i + 1,
         });
       }
       return pages;
     }
-    
-    return [{ content: data.text, pageNumber: 1 }];
+
+    return [{ url: "", content: data.text, pageNumber: 1 }];
   } catch (error) {
     console.error("Error parsing PDF:", error);
     throw new Error(`Failed to parse PDF file: ${error instanceof Error ? error.message : "Unknown error"}`);

@@ -1,7 +1,8 @@
+// @ts-nocheck - Legacy migration script; uses old RuleDefinition/RuleInstance model names.
 /**
  * Data migration script to migrate from RuleDefinition/RuleInstance/CustomRule
  * to unified Rule model.
- * 
+ *
  * Run with: tsx prisma/migrate-data.ts
  */
 
