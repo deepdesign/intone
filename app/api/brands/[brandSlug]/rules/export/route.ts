@@ -61,7 +61,7 @@ export async function GET(
           locale: brand.locale,
         },
         exportedAt: new Date().toISOString(),
-        rules: rules.map((rule) => ({
+        rules: rules.map((rule: { key: string | null; name: string; category: string | null; description: string | null; rationale: string | null; value: unknown; controlType: string | null; status: string; surfaces: string[]; channels: string[]; examples: unknown; suggestions: unknown; exceptions: unknown; source: string | null }) => ({
           key: rule.key,
           name: rule.name,
           category: rule.category,
