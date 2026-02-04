@@ -102,7 +102,7 @@ export async function POST(
     if (result.issues && Array.isArray(result.issues)) {
       for (const issue of result.issues) {
         // Find the rule that triggered this issue
-        const rule = rules.find((r) => r.key === issue.ruleKey || r.name === issue.ruleKey);
+        const rule = rules.find((r: { id: string; key?: string | null; name: string }) => r.key === issue.ruleKey || r.name === issue.ruleKey);
         
         if (rule) {
           await prisma.finding.create({
