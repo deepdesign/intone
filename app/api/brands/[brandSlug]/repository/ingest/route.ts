@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { RepositoryChunk } from "@prisma/client";
 import { getCurrentUser, hasBrandAccess } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getBrandIdFromSlug } from "@/lib/db/brand";
@@ -80,7 +79,7 @@ export async function POST(
     })) as { id: string; text: string; embedding?: unknown }[];
 
     // Step 4: Create chunks and detect similarities
-    type ChunkWithSimilar = RepositoryChunk & {
+    type ChunkWithSimilar = Awaited<ReturnType<typeof prisma.repositoryChunk.create>> & {
       duplicates: Array<{ id: string; similarity: number }>;
       nearDuplicates: Array<{ id: string; similarity: number }>;
       related: Array<{ id: string; similarity: number }>;
