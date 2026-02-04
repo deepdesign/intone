@@ -64,7 +64,7 @@ export async function GET(
     const issuesBySeverity: Record<string, number> = {};
     let totalIssues = audit.issues.length;
 
-    audit.issues.forEach((issue) => {
+    audit.issues.forEach((issue: { category?: string | null; severity: string }) => {
       const category = issue.category || "other";
       issuesByCategory[category] = (issuesByCategory[category] || 0) + 1;
       issuesBySeverity[issue.severity] = (issuesBySeverity[issue.severity] || 0) + 1;
